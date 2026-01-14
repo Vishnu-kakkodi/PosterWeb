@@ -2510,7 +2510,7 @@
 
 
 import { useRef, useState, useEffect } from "react";
-import { Plus, Save, Type, Palette, ImagePlus, Sparkles } from "lucide-react";
+import { Plus, Save, Type, Palette, ImagePlus, Sparkles, Move } from "lucide-react";
 
 const FONT_FAMILIES = [
   // 💍 Wedding / Script (Names)
@@ -2564,6 +2564,7 @@ export default function CreateTemplate() {
 
   const [placeholders, setPlaceholders] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   /* ================= IMAGE UPLOAD ================= */
   const handleImageUpload = (e) => {
@@ -2610,7 +2611,7 @@ export default function CreateTemplate() {
     setSelectedId(id);
   };
 
-  /* ================= DRAG FUNCTION (WORKS FOR BOTH MOUSE & TOUCH) ================= */
+  /* ================= ENHANCED DRAG FUNCTION (WITH OFFSET CALCULATION) ================= */
   const startDrag = (e, id) => {
     e.preventDefault();
     e.stopPropagation();
@@ -2631,6 +2632,15 @@ export default function CreateTemplate() {
     const startX = clientX;
     const startY = clientY;
 
+    // Calculate offset from where user clicked/touched to the text position
+    // This makes dragging feel more natural
+    const textX = textRect.left;
+    const textY = textRect.top;
+    const offsetX = startX - textX;
+    const offsetY = startY - textY;
+    
+    setDragOffset({ x: offsetX, y: offsetY });
+
     const target = placeholders.find((p) => p.id === id);
     if (!target) return;
 
@@ -2643,6 +2653,7 @@ export default function CreateTemplate() {
       const moveX = isMoveTouch ? ev.touches[0].clientX : ev.clientX;
       const moveY = isMoveTouch ? ev.touches[0].clientY : ev.clientY;
       
+      // Calculate new position considering the offset
       let x = baseX + (moveX - startX);
       let y = baseY + (moveY - startY);
 
@@ -2663,6 +2674,8 @@ export default function CreateTemplate() {
     };
 
     const onUp = () => {
+      // Reset offset
+      setDragOffset({ x: 0, y: 0 });
       // Remove mouse event listeners
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
@@ -2959,8 +2972,13 @@ export default function CreateTemplate() {
           <div className="mb-4">
             <h3 className="font-semibold text-lg text-gray-900">Canvas Preview</h3>
             <p className="text-sm text-gray-600 mt-1">
-              {imageUrl ? "Drag text elements to position them (works on mobile too!)" : "Upload an image to start designing"}
+              {imageUrl ? "Tap text to select, then use drag handle (⬆) or drag text directly" : "Upload an image to start designing"}
             </p>
+            {imageUrl && (
+              <p className="text-xs text-blue-600 mt-2">
+                💡 Mobile Tip: Use the drag handle above selected text for precise placement
+              </p>
+            )}
           </div>
 
           <div className="relative bg-gray-50 rounded-lg overflow-hidden min-h-[400px] flex items-center justify-center">
@@ -2975,13 +2993,14 @@ export default function CreateTemplate() {
                 <img
                   ref={imageRef}
                   src={imageUrl}
-                  alt=""
+                  alt="Template background"
                   onLoad={(e) => {
                     const r = e.target.getBoundingClientRect();
                     setDisplayDimensions({ width: r.width, height: r.height });
                   }}
-                  className="max-w-full max-h-[calc(100vh-300px)] rounded-lg shadow-md"
-                  style={{ touchAction: "none" }} // Prevent image dragging on mobile
+                  className="max-w-full max-h-[calc(100vh-300px)] rounded-lg shadow-md select-none"
+                  draggable="false"
+                  style={{ touchAction: "none" }}
                 />
 
                 {placeholders.map((p) => {
@@ -2993,32 +3012,93 @@ export default function CreateTemplate() {
                     <div
                       key={p.id}
                       ref={(el) => (textRefs.current[p.id] = el)}
-                      onMouseDown={(e) => startDrag(e, p.id)}
-                      onTouchStart={(e) => startDrag(e, p.id)} // Touch support for mobile
+                      className={`relative ${selectedId === p.id ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
                       style={{
                         position: "absolute",
                         left: x,
                         top: y,
-                        fontSize: fs,
-                        fontFamily: p.fontFamily,
-                        fontWeight: p.bold ? 700 : 400,
-                        fontStyle: p.italic ? "italic" : "normal",
-                        letterSpacing: p.letterSpacing,
-                        color: p.color,
-                        textShadow: p.textShadow
-                          ? "2px 2px 6px rgba(0,0,0,0.3)"
-                          : "none",
-                        cursor: "move",
-                        whiteSpace: "nowrap",
-                        // Mobile touch optimizations
+                        // Create larger touch area without affecting visual position
+                        padding: "40px",
+                        margin: "-40px",
                         touchAction: "none",
                         userSelect: "none",
                         WebkitUserSelect: "none",
                         WebkitTapHighlightColor: "transparent",
                       }}
-                      className={`select-none ${selectedId === p.id ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
                     >
-                      {p.key || "Type here"}
+                      {/* Drag Handle - Always visible when selected */}
+                      {selectedId === p.id && (
+                        <div 
+                          className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white p-3 rounded-full shadow-lg cursor-move z-50 hover:bg-blue-700 active:bg-blue-800 transition-colors"
+                          onMouseDown={(e) => startDrag(e, p.id)}
+                          onTouchStart={(e) => {
+                            e.stopPropagation();
+                            startDrag(e, p.id);
+                          }}
+                          style={{
+                            width: "48px",
+                            height: "48px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
+                          }}
+                          title="Drag handle"
+                        >
+                          <Move className="w-6 h-6" />
+                        </div>
+                      )}
+                      
+                      {/* The actual text element with enhanced touch area */}
+                      <div
+                        className="inline-block"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          startDrag(e, p.id);
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          setSelectedId(p.id);
+                          startDrag(e, p.id);
+                        }}
+                        style={{
+                          fontSize: fs,
+                          fontFamily: p.fontFamily,
+                          fontWeight: p.bold ? 700 : 400,
+                          fontStyle: p.italic ? "italic" : "normal",
+                          letterSpacing: `${p.letterSpacing}px`,
+                          color: p.color,
+                          textShadow: p.textShadow
+                            ? "2px 2px 6px rgba(0,0,0,0.3)"
+                            : "none",
+                          lineHeight: "1.2",
+                          cursor: "move",
+                          whiteSpace: "nowrap",
+                          // Visual feedback for touch
+                          transition: "transform 0.1s, opacity 0.1s",
+                          opacity: selectedId === p.id ? 1 : 0.95,
+                        }}
+                        onTouchStart={(e) => {
+                          // Visual feedback
+                          e.currentTarget.style.transform = "scale(1.05)";
+                        }}
+                        onTouchEnd={(e) => {
+                          e.currentTarget.style.transform = "scale(1)";
+                        }}
+                      >
+                        {p.key || "Type here"}
+                      </div>
+                      
+                      {/* Touch instructions tooltip for mobile */}
+                      {selectedId === p.id && window.innerWidth < 768 && (
+                        <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-2 px-3 rounded-lg whitespace-nowrap z-50 animate-pulse">
+                          <div className="flex items-center space-x-1">
+                            <Move className="w-3 h-3" />
+                            <span>Use handle or drag text</span>
+                          </div>
+                          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -3036,11 +3116,36 @@ export default function CreateTemplate() {
           }
           
           /* Prevent text selection during drag on mobile */
-          .select-none {
+          .select-none, .relative {
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
+          }
+          
+          /* Improve touch feedback */
+          [role="button"], button, [onClick], [onTouchStart] {
+            cursor: pointer;
+          }
+        }
+        
+        /* Smooth transitions */
+        .transition-transform {
+          transition-property: transform;
+          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+          transition-duration: 150ms;
+        }
+        
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.8;
           }
         }
       `}</style>
