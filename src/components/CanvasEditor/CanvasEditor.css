@@ -1,0 +1,10 @@
+.canvas-wrapper {
+  width: 600px;
+  height: 350px;
+  border: 1px dashed #999;
+  background: #fff;
+}
+
+canvas {
+  display: block;
+}
