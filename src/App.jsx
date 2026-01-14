@@ -3,6 +3,8 @@ import CreateTemplate from "./pages/CreateTemplate";
 import TemplateList from "./pages/TemplateList";
 import DesignLandingPage from "./pages/LandingPage";
 import EditTemplate from "./pages/EditTemplate";
+import FabricCanvasDesigner from "./pages/CustomCanvasDesigner";
+
 
 export default function App() {
   return (
@@ -12,6 +14,8 @@ export default function App() {
         <Route path="/templates" element={<TemplateList />} />
         <Route path="/create" element={<CreateTemplate />} />
         <Route path="/edit-template/:id" element={<EditTemplate />} />
+                <Route path="/custom" element={<FabricCanvasDesigner />} />
+
       </Routes>
     </div>
   );

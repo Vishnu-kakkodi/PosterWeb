@@ -1997,6 +1997,518 @@
 
 
 
+// import { useRef, useState, useEffect } from "react";
+// import { Plus, Save, Type, Palette, ImagePlus, Sparkles } from "lucide-react";
+
+// const FONT_FAMILIES = [
+//   // 💍 Wedding / Script (Names)
+//   { label: "Great Vibes (Wedding Script)", value: "'Great Vibes', cursive" },
+//   { label: "Allura (Elegant Script)", value: "'Allura', cursive" },
+//   { label: "Alex Brush (Luxury Script)", value: "'Alex Brush', cursive" },
+//   { label: "Dancing Script", value: "'Dancing Script', cursive" },
+//   { label: "Sacramento (Soft Script)", value: "'Sacramento', cursive" },
+//   { label: "Parisienne (Romantic)", value: "'Parisienne', cursive" },
+
+//   // 👑 Royal / Serif (Headings)
+//   { label: "Playfair Display (Elegant)", value: "'Playfair Display', serif" },
+//   { label: "Cinzel (Royal)", value: "'Cinzel', serif" },
+//   { label: "Cormorant Garamond (Classic)", value: "'Cormorant Garamond', serif" },
+//   { label: "Libre Baskerville", value: "'Libre Baskerville', serif" },
+//   { label: "Merriweather", value: "'Merriweather', serif" },
+
+//   // ✨ Modern / Clean (Details)
+//   { label: "Poppins", value: "'Poppins', sans-serif" },
+//   { label: "Montserrat", value: "'Montserrat', sans-serif" },
+//   { label: "Lato", value: "'Lato', sans-serif" },
+//   { label: "Raleway", value: "'Raleway', sans-serif" },
+//   { label: "Open Sans", value: "'Open Sans', sans-serif" },
+
+//   // 🎨 Decorative / Special
+//   { label: "Cinzel Decorative", value: "'Cinzel Decorative', cursive" },
+//   { label: "Italianno (Thin Script)", value: "'Italianno', cursive" },
+// ];
+
+
+// const TEMPLATE_TYPES = [
+//   "Bottom Bar Design",
+//   "Wedding Card Design",
+//   "Birthday Wish Design",
+//   "Business Card Design",
+// ];
+
+
+// export default function CreateTemplate() {
+//   const imageRef = useRef(null);
+//   const textRefs = useRef({});
+
+//   const [imageFile, setImageFile] = useState(null);
+//   const [imageUrl, setImageUrl] = useState(null);
+
+//   const [displayDimensions, setDisplayDimensions] = useState({
+//     width: 0,
+//     height: 0,
+//   });
+
+//   const [name, setName] = useState("");
+//   const [description, setDescription] = useState("");
+
+//   const [placeholders, setPlaceholders] = useState([]);
+//   const [selectedId, setSelectedId] = useState(null);
+
+//   /* ================= IMAGE UPLOAD ================= */
+//   const handleImageUpload = (e) => {
+//     const file = e.target.files?.[0];
+//     if (!file) return;
+
+//     setImageFile(file);
+//     const url = URL.createObjectURL(file);
+//     setImageUrl(url);
+//   };
+
+//   /* ================= TRACK DISPLAY SIZE ================= */
+//   useEffect(() => {
+//     const updateSize = () => {
+//       if (!imageRef.current) return;
+//       const r = imageRef.current.getBoundingClientRect();
+//       setDisplayDimensions({ width: r.width, height: r.height });
+//     };
+
+//     updateSize();
+//     window.addEventListener("resize", updateSize);
+//     return () => window.removeEventListener("resize", updateSize);
+//   }, [imageUrl]);
+
+//   /* ================= ADD TEXT ================= */
+//   const addPlaceholder = () => {
+//     const id = crypto.randomUUID();
+//     setPlaceholders((prev) => [
+//       ...prev,
+//       {
+//         id,
+//         key: "",
+//         xPercent: 0,
+//         yPercent: 0,
+//         fontSizePercent: 4,
+//         color: "#000000",
+//         bold: true,
+//         italic: false,
+//         fontFamily: "'Great Vibes', cursive",
+//         letterSpacing: 0,
+//         textShadow: false,
+//       },
+//     ]);
+//     setSelectedId(id);
+//   };
+
+//   /* ================= DRAG ================= */
+//   const startDrag = (e, id) => {
+//     e.preventDefault();
+//     setSelectedId(id);
+
+//     const img = imageRef.current;
+//     const textEl = textRefs.current[id];
+//     if (!img || !textEl) return;
+
+//     const imgRect = img.getBoundingClientRect();
+//     const textRect = textEl.getBoundingClientRect();
+
+//     const startX = e.clientX;
+//     const startY = e.clientY;
+
+//     const target = placeholders.find((p) => p.id === id);
+//     if (!target) return;
+
+//     const baseX = (target.xPercent / 100) * imgRect.width;
+//     const baseY = (target.yPercent / 100) * imgRect.height;
+
+//     const onMove = (ev) => {
+//       let x = baseX + (ev.clientX - startX);
+//       let y = baseY + (ev.clientY - startY);
+
+//       x = Math.max(0, Math.min(imgRect.width - textRect.width, x));
+//       y = Math.max(0, Math.min(imgRect.height - textRect.height, y));
+
+//       setPlaceholders((prev) =>
+//         prev.map((p) =>
+//           p.id === id
+//             ? {
+//                 ...p,
+//                 xPercent: (x / imgRect.width) * 100,
+//                 yPercent: (y / imgRect.height) * 100,
+//               }
+//             : p
+//         )
+//       );
+//     };
+
+//     const onUp = () => {
+//       window.removeEventListener("mousemove", onMove);
+//       window.removeEventListener("mouseup", onUp);
+//     };
+
+//     window.addEventListener("mousemove", onMove);
+//     window.addEventListener("mouseup", onUp);
+//   };
+
+//   /* ================= UPDATE ================= */
+//   const updateSelected = (changes) => {
+//     setPlaceholders((prev) =>
+//       prev.map((p) => (p.id === selectedId ? { ...p, ...changes } : p))
+//     );
+//   };
+
+//   const selected = placeholders.find((p) => p.id === selectedId);
+
+//   /* ================= SAVE ================= */
+//   const saveTemplate = async () => {
+//     if (!imageRef.current || !imageFile || !name) {
+//       alert("Template name and image required");
+//       return;
+//     }
+
+//     const naturalWidth = imageRef.current.naturalWidth;
+//     const naturalHeight = imageRef.current.naturalHeight;
+
+//     const payloadPlaceholders = placeholders.map((p) => ({
+//       key: p.key,
+//       x: Math.round((p.xPercent / 100) * naturalWidth),
+//       y: Math.round((p.yPercent / 100) * naturalHeight),
+//       fontSize: Math.round((p.fontSizePercent / 100) * naturalWidth),
+//       xPercent: p.xPercent,
+//       yPercent: p.yPercent,
+//       fontSizePercent: p.fontSizePercent,
+//       color: p.color,
+//       bold: p.bold,
+//       italic: p.italic,
+//       fontFamily: p.fontFamily,
+//       letterSpacing: p.letterSpacing,
+//       textShadow: p.textShadow,
+//     }));
+
+//     const formData = new FormData();
+//     formData.append("name", name);
+//     formData.append("description", description);
+//     formData.append("image", imageFile);
+//     formData.append("placeholders", JSON.stringify(payloadPlaceholders));
+
+//     await fetch("https://visitingcard-backend.onrender.com/templates/", {
+//       method: "POST",
+//       body: formData,
+//     });
+
+//     alert("Template saved ✅");
+//   };
+
+//   /* ================= UI ================= */
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+//       {/* Header */}
+//       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center space-x-2">
+//               <Sparkles className="w-6 h-6 text-blue-600" />
+//               <h1 className="text-xl font-bold text-gray-900">Create Template</h1>
+//             </div>
+//             <button
+//               onClick={saveTemplate}
+//               className="flex items-center space-x-2 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+//             >
+//               <Save className="w-4 h-4" />
+//               <span className="hidden sm:inline">Save Template</span>
+//               <span className="sm:hidden">Save</span>
+//             </button>
+//           </div>
+//         </div>
+//       </header>
+
+//       <div className="flex flex-col lg:flex-row gap-6 p-4 sm:p-6 max-w-7xl mx-auto">
+//         {/* LEFT PANEL */}
+//         <div className="w-full lg:w-80 bg-white rounded-xl shadow-lg p-6 space-y-6 h-fit lg:sticky lg:top-24">
+//           {/* Template Info Section */}
+//           <div className="space-y-4">
+//             <div className="flex items-center space-x-2 text-gray-900">
+//               <ImagePlus className="w-5 h-5 text-blue-600" />
+//               <h3 className="font-semibold text-lg">Template Info</h3>
+//             </div>
+
+//             <div className="space-y-3">
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-1">
+//                   Template Name *
+//                 </label>
+//         <select
+//   value={name}
+//   onChange={(e) => setName(e.target.value)}
+//   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white"
+// >
+//   <option value="">Select template type *</option>
+//   {TEMPLATE_TYPES.map((type) => (
+//     <option key={type} value={type}>
+//       {type}
+//     </option>
+//   ))}
+// </select>
+
+//               </div>
+
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-1">
+//                   Description
+//                 </label>
+//                 <textarea
+//                   placeholder="Describe your template"
+//                   value={description}
+//                   onChange={(e) => setDescription(e.target.value)}
+//                   rows={3}
+//                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none transition-all"
+//                 />
+//               </div>
+
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2">
+//                   Upload Image *
+//                 </label>
+//                 <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all">
+//                   <input
+//                     type="file"
+//                     accept="image/*"
+//                     onChange={handleImageUpload}
+//                     className="hidden"
+//                   />
+//                   <div className="flex items-center space-x-2 text-gray-600">
+//                     <ImagePlus className="w-5 h-5" />
+//                     <span className="text-sm">{imageFile ? imageFile.name : "Choose image"}</span>
+//                   </div>
+//                 </label>
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* Add Text Button */}
+//           <button
+//             onClick={addPlaceholder}
+//             className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-md"
+//           >
+//             <Plus className="w-5 h-5" />
+//             <span>Add Text Layer</span>
+//           </button>
+
+//           {/* Text Styling Section */}
+//           {selected && (
+//             <div className="space-y-4 pt-4 border-t border-gray-200">
+//               <div className="flex items-center space-x-2 text-gray-900">
+//                 <Type className="w-5 h-5 text-blue-600" />
+//                 <h3 className="font-semibold text-lg">Text Styling</h3>
+//               </div>
+
+//               <div className="space-y-4">
+//                 <div>
+//                   <label className="block text-sm font-medium text-gray-700 mb-1">
+//                     Text Content
+//                   </label>
+//                   <input
+//                     placeholder="Enter text"
+//                     value={selected.key}
+//                     onChange={(e) => updateSelected({ key: e.target.value })}
+//                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+//                   />
+//                 </div>
+
+//                 <div>
+//                   <label className="block text-sm font-medium text-gray-700 mb-1">
+//                     Font Family
+//                   </label>
+//                   <select
+//                     value={selected.fontFamily}
+//                     onChange={(e) => updateSelected({ fontFamily: e.target.value })}
+//                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white"
+//                   >
+//                     {FONT_FAMILIES.map((f) => (
+//                       <option key={f.value} value={f.value}>
+//                         {f.label}
+//                       </option>
+//                     ))}
+//                   </select>
+//                 </div>
+
+//                 <div>
+//                   <label className="block text-sm font-medium text-gray-700 mb-2">
+//                     Font Size: {selected.fontSizePercent.toFixed(1)}%
+//                   </label>
+//                   <input
+//                     type="range"
+//                     min={1}
+//                     max={10}
+//                     step={0.1}
+//                     value={selected.fontSizePercent}
+//                     onChange={(e) => updateSelected({ fontSizePercent: +e.target.value })}
+//                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+//                   />
+//                 </div>
+
+//                 <div>
+//                   <label className="block text-sm font-medium text-gray-700 mb-2">
+//                     Letter Spacing: {selected.letterSpacing}
+//                   </label>
+//                   <input
+//                     type="range"
+//                     min={0}
+//                     max={10}
+//                     value={selected.letterSpacing}
+//                     onChange={(e) => updateSelected({ letterSpacing: +e.target.value })}
+//                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+//                   />
+//                 </div>
+
+//                 <div>
+//                   <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+//                     <Palette className="w-4 h-4" />
+//                     <span>Text Color</span>
+//                   </label>
+//                   <div className="flex items-center space-x-3">
+//                     <input
+//                       type="color"
+//                       value={selected.color}
+//                       onChange={(e) => updateSelected({ color: e.target.value })}
+//                       className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+//                     />
+//                     <input
+//                       type="text"
+//                       value={selected.color}
+//                       onChange={(e) => updateSelected({ color: e.target.value })}
+//                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+//                     />
+//                   </div>
+//                 </div>
+
+//                 <div className="space-y-2 pt-2">
+//                   <label className="flex items-center space-x-3 cursor-pointer group">
+//                     <input
+//                       type="checkbox"
+//                       checked={selected.bold}
+//                       onChange={(e) => updateSelected({ bold: e.target.checked })}
+//                       className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+//                     />
+//                     <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+//                       Bold
+//                     </span>
+//                   </label>
+
+//                   <label className="flex items-center space-x-3 cursor-pointer group">
+//                     <input
+//                       type="checkbox"
+//                       checked={selected.italic}
+//                       onChange={(e) => updateSelected({ italic: e.target.checked })}
+//                       className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+//                     />
+//                     <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+//                       Italic
+//                     </span>
+//                   </label>
+
+//                   <label className="flex items-center space-x-3 cursor-pointer group">
+//                     <input
+//                       type="checkbox"
+//                       checked={selected.textShadow}
+//                       onChange={(e) => updateSelected({ textShadow: e.target.checked })}
+//                       className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+//                     />
+//                     <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+//                       Text Shadow ✨
+//                     </span>
+//                   </label>
+//                 </div>
+//               </div>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* CANVAS */}
+//         <div className="flex-1 bg-white rounded-xl shadow-lg p-6">
+//           <div className="mb-4">
+//             <h3 className="font-semibold text-lg text-gray-900">Canvas Preview</h3>
+//             <p className="text-sm text-gray-600 mt-1">
+//               {imageUrl ? "Drag text elements to position them" : "Upload an image to start designing"}
+//             </p>
+//           </div>
+
+//           <div className="relative bg-gray-50 rounded-lg overflow-hidden min-h-[400px] flex items-center justify-center">
+//             {!imageUrl ? (
+//               <div className="text-center text-gray-400 py-20">
+//                 <ImagePlus className="w-16 h-16 mx-auto mb-4 opacity-50" />
+//                 <p className="text-lg font-medium">No image uploaded</p>
+//                 <p className="text-sm mt-2">Upload an image to begin</p>
+//               </div>
+//             ) : (
+//               <div className="relative inline-block">
+//                 <img
+//                   ref={imageRef}
+//                   src={imageUrl}
+//                   alt=""
+//                   onLoad={(e) => {
+//                     const r = e.target.getBoundingClientRect();
+//                     setDisplayDimensions({ width: r.width, height: r.height });
+//                   }}
+//                   className="max-w-full max-h-[calc(100vh-300px)] rounded-lg shadow-md"
+//                 />
+
+//                 {placeholders.map((p) => {
+//                   const x = (p.xPercent / 100) * displayDimensions.width;
+//                   const y = (p.yPercent / 100) * displayDimensions.height;
+//                   const fs = (p.fontSizePercent / 100) * displayDimensions.width;
+
+//                   return (
+//                     <div
+//                       key={p.id}
+//                       ref={(el) => (textRefs.current[p.id] = el)}
+//                       onMouseDown={(e) => startDrag(e, p.id)}
+//                       style={{
+//                         position: "absolute",
+//                         left: x,
+//                         top: y,
+//                         fontSize: fs,
+//                         fontFamily: p.fontFamily,
+//                         fontWeight: p.bold ? 700 : 400,
+//                         fontStyle: p.italic ? "italic" : "normal",
+//                         letterSpacing: p.letterSpacing,
+//                         color: p.color,
+//                         textShadow: p.textShadow
+//                           ? "2px 2px 6px rgba(0,0,0,0.3)"
+//                           : "none",
+//                         cursor: "move",
+//                         whiteSpace: "nowrap",
+//                       }}
+//                       className={`select-none ${selectedId === p.id ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
+//                     >
+//                       {p.key || "Type here"}
+//                     </div>
+//                   );
+//                 })}
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { useRef, useState, useEffect } from "react";
 import { Plus, Save, Type, Palette, ImagePlus, Sparkles } from "lucide-react";
 
@@ -2028,14 +2540,12 @@ const FONT_FAMILIES = [
   { label: "Italianno (Thin Script)", value: "'Italianno', cursive" },
 ];
 
-
 const TEMPLATE_TYPES = [
   "Bottom Bar Design",
   "Wedding Card Design",
   "Birthday Wish Design",
   "Business Card Design",
 ];
-
 
 export default function CreateTemplate() {
   const imageRef = useRef(null);
@@ -2100,9 +2610,10 @@ export default function CreateTemplate() {
     setSelectedId(id);
   };
 
-  /* ================= DRAG ================= */
+  /* ================= DRAG FUNCTION (WORKS FOR BOTH MOUSE & TOUCH) ================= */
   const startDrag = (e, id) => {
     e.preventDefault();
+    e.stopPropagation();
     setSelectedId(id);
 
     const img = imageRef.current;
@@ -2112,8 +2623,13 @@ export default function CreateTemplate() {
     const imgRect = img.getBoundingClientRect();
     const textRect = textEl.getBoundingClientRect();
 
-    const startX = e.clientX;
-    const startY = e.clientY;
+    // Get coordinates based on event type (mouse or touch)
+    const isTouch = e.type.includes('touch');
+    const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+    const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+
+    const startX = clientX;
+    const startY = clientY;
 
     const target = placeholders.find((p) => p.id === id);
     if (!target) return;
@@ -2122,8 +2638,13 @@ export default function CreateTemplate() {
     const baseY = (target.yPercent / 100) * imgRect.height;
 
     const onMove = (ev) => {
-      let x = baseX + (ev.clientX - startX);
-      let y = baseY + (ev.clientY - startY);
+      // Get coordinates based on event type
+      const isMoveTouch = ev.type.includes('touch');
+      const moveX = isMoveTouch ? ev.touches[0].clientX : ev.clientX;
+      const moveY = isMoveTouch ? ev.touches[0].clientY : ev.clientY;
+      
+      let x = baseX + (moveX - startX);
+      let y = baseY + (moveY - startY);
 
       x = Math.max(0, Math.min(imgRect.width - textRect.width, x));
       y = Math.max(0, Math.min(imgRect.height - textRect.height, y));
@@ -2142,12 +2663,22 @@ export default function CreateTemplate() {
     };
 
     const onUp = () => {
+      // Remove mouse event listeners
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
+      // Remove touch event listeners
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
     };
 
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
+    // Add both mouse and touch event listeners
+    if (isTouch) {
+      window.addEventListener("touchmove", onMove, { passive: false });
+      window.addEventListener("touchend", onUp);
+    } else {
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    }
   };
 
   /* ================= UPDATE ================= */
@@ -2237,19 +2768,18 @@ export default function CreateTemplate() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Template Name *
                 </label>
-        <select
-  value={name}
-  onChange={(e) => setName(e.target.value)}
-  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white"
->
-  <option value="">Select template type *</option>
-  {TEMPLATE_TYPES.map((type) => (
-    <option key={type} value={type}>
-      {type}
-    </option>
-  ))}
-</select>
-
+                <select
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white"
+                >
+                  <option value="">Select template type *</option>
+                  {TEMPLATE_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -2429,7 +2959,7 @@ export default function CreateTemplate() {
           <div className="mb-4">
             <h3 className="font-semibold text-lg text-gray-900">Canvas Preview</h3>
             <p className="text-sm text-gray-600 mt-1">
-              {imageUrl ? "Drag text elements to position them" : "Upload an image to start designing"}
+              {imageUrl ? "Drag text elements to position them (works on mobile too!)" : "Upload an image to start designing"}
             </p>
           </div>
 
@@ -2451,6 +2981,7 @@ export default function CreateTemplate() {
                     setDisplayDimensions({ width: r.width, height: r.height });
                   }}
                   className="max-w-full max-h-[calc(100vh-300px)] rounded-lg shadow-md"
+                  style={{ touchAction: "none" }} // Prevent image dragging on mobile
                 />
 
                 {placeholders.map((p) => {
@@ -2463,6 +2994,7 @@ export default function CreateTemplate() {
                       key={p.id}
                       ref={(el) => (textRefs.current[p.id] = el)}
                       onMouseDown={(e) => startDrag(e, p.id)}
+                      onTouchStart={(e) => startDrag(e, p.id)} // Touch support for mobile
                       style={{
                         position: "absolute",
                         left: x,
@@ -2478,6 +3010,11 @@ export default function CreateTemplate() {
                           : "none",
                         cursor: "move",
                         whiteSpace: "nowrap",
+                        // Mobile touch optimizations
+                        touchAction: "none",
+                        userSelect: "none",
+                        WebkitUserSelect: "none",
+                        WebkitTapHighlightColor: "transparent",
                       }}
                       className={`select-none ${selectedId === p.id ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
                     >
@@ -2490,6 +3027,23 @@ export default function CreateTemplate() {
           </div>
         </div>
       </div>
+
+      {/* Add this CSS for better mobile experience */}
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          * {
+            -webkit-tap-highlight-color: transparent;
+          }
+          
+          /* Prevent text selection during drag on mobile */
+          .select-none {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }
