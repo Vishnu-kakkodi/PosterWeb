@@ -2565,6 +2565,7 @@ export default function CreateTemplate() {
   const [placeholders, setPlaceholders] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
 
   /* ================= IMAGE UPLOAD ================= */
   const handleImageUpload = (e) => {
@@ -2616,6 +2617,7 @@ export default function CreateTemplate() {
     e.preventDefault();
     e.stopPropagation();
     setSelectedId(id);
+    setIsDragging(true);
 
     const img = imageRef.current;
     const textEl = textRefs.current[id];
@@ -2674,7 +2676,8 @@ export default function CreateTemplate() {
     };
 
     const onUp = () => {
-      // Reset offset
+      // Reset states
+      setIsDragging(false);
       setDragOffset({ x: 0, y: 0 });
       // Remove mouse event listeners
       window.removeEventListener("mousemove", onMove);
@@ -2692,6 +2695,21 @@ export default function CreateTemplate() {
       window.addEventListener("mousemove", onMove);
       window.addEventListener("mouseup", onUp);
     }
+  };
+
+  /* ================= HANDLE TEXT TOUCH ================= */
+  const handleTextTouch = (e, p) => {
+    e.stopPropagation();
+    setSelectedId(p.id);
+    
+    // Visual feedback
+    const target = e.currentTarget;
+    target.style.transform = "scale(1.05)";
+    
+    // Remove the scale effect after a short delay
+    setTimeout(() => {
+      target.style.transform = "scale(1)";
+    }, 150);
   };
 
   /* ================= UPDATE ================= */
@@ -3051,15 +3069,14 @@ export default function CreateTemplate() {
                       
                       {/* The actual text element with enhanced touch area */}
                       <div
-                        className="inline-block"
+                        className="inline-block transition-transform duration-150"
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           startDrag(e, p.id);
                         }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
-                          setSelectedId(p.id);
-                          startDrag(e, p.id);
+                        onTouchStart={(e) => handleTextTouch(e, p)}
+                        onTouchEnd={(e) => {
+                          e.preventDefault();
                         }}
                         style={{
                           fontSize: fs,
@@ -3074,16 +3091,8 @@ export default function CreateTemplate() {
                           lineHeight: "1.2",
                           cursor: "move",
                           whiteSpace: "nowrap",
-                          // Visual feedback for touch
-                          transition: "transform 0.1s, opacity 0.1s",
                           opacity: selectedId === p.id ? 1 : 0.95,
-                        }}
-                        onTouchStart={(e) => {
-                          // Visual feedback
-                          e.currentTarget.style.transform = "scale(1.05)";
-                        }}
-                        onTouchEnd={(e) => {
-                          e.currentTarget.style.transform = "scale(1)";
+                          transform: isDragging && selectedId === p.id ? "scale(1.05)" : "scale(1)",
                         }}
                       >
                         {p.key || "Type here"}
